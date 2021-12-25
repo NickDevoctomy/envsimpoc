@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
 using UnityEngine;
 
 [ExecuteInEditMode]
@@ -17,6 +20,8 @@ public class Map : MonoBehaviour
     private GameObject _coverings;
     private GameObject _water;
     private TileType[,] _terrainTiles;
+    private List<List<Point>> _zones;
+    private List<Point> _allZonedPoints;
 
     void Start()
     {
@@ -28,12 +33,23 @@ public class Map : MonoBehaviour
         Generate();
     }
 
+    private void OnDrawGizmos()
+    {
+        //Gizmos.color = UnityEngine.Color.red;
+        //foreach (var curPoint in _test)
+        //{
+        //    var location = new Vector3(curPoint.X, 2, curPoint.Y);
+        //    Gizmos.DrawSphere(location, 0.1f);
+        //}
+    }
+
     public void Generate()
     {
         CleanUp();
         CreateTiles();
         CreateTileCoverings();
         CreateWater();
+        InitialiseZones();
     }
 
     private void CleanUp()
@@ -200,5 +216,120 @@ public class Map : MonoBehaviour
                     throw new System.NotImplementedException($"Tile type of '{tileType}' not implemented.");
                 }
         }
+    }
+
+    private void InitialiseZones()
+    {
+        _zones = new List<List<Point>>();
+        _allZonedPoints = new List<Point>();
+        var curPoint = GetNextUnzonedPoint();
+        while (curPoint != null)
+        {
+            var curPointType = _terrainTiles[curPoint.GetValueOrDefault().X, curPoint.GetValueOrDefault().Y];
+            var curZone = GetTileTypeZoneFromPoint(
+                curPoint.GetValueOrDefault(),
+                curPointType == TileType.Water || curPointType == TileType.Land ?   
+                    new List<TileType> { TileType.Water, TileType.Land } :
+                    new List<TileType> { TileType.Rock },
+                _terrainTiles);
+            _zones.Add(curZone);
+            _allZonedPoints.AddRange(curZone);
+            curPoint = GetNextUnzonedPoint();
+        }
+    }
+
+    private Point? GetNextUnzonedPoint()
+    {
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                var curPoint = new Point(x, y);
+                if(!_allZonedPoints.Contains(curPoint))
+                {
+                    return curPoint;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private List<Point> GetTileTypeZoneFromPoint(
+        Point location,
+        List<TileType> tileTypes,
+        TileType[,] terrainTiles)
+    {
+        var eligableNeigbours = GetTouchingOfType(
+            location,
+            terrainTiles,
+            tileTypes,
+            false);
+        var checkedPoints = new List<Point>();
+        var pointsToCheck = eligableNeigbours.ToList();
+        while(pointsToCheck.Count > 0)
+        {
+            var points = pointsToCheck.ToArray();
+            foreach(var curPoint in points)
+            {
+                pointsToCheck.Remove(curPoint);
+
+                if (checkedPoints.Contains(curPoint))
+                {
+                    continue;
+                }
+
+                var nextEligableNeighbours = GetTouchingOfType(
+                    curPoint,
+                    terrainTiles,
+                    tileTypes,
+                    false);
+                var nextToCheck = nextEligableNeighbours.Where(x => !checkedPoints.Contains(x)).ToList();
+                pointsToCheck.AddRange(nextToCheck);
+                checkedPoints.Add(curPoint);
+            }
+        }
+
+        return checkedPoints;
+    }
+
+    private List<Point> GetTouchingOfType(
+        Point location,
+        TileType[,] terrainTiles,
+        List<TileType> types,
+        bool includeDiagonal)
+    {
+        var touching = new Dictionary<Point, TileType?>();
+        var tileType = terrainTiles[location.X, location.Y];
+
+        AddTileTypeAtLocation(new Point(location.X, location.Y + 1), touching);
+        AddTileTypeAtLocation(new Point(location.X + 1, location.Y), touching);
+        AddTileTypeAtLocation(new Point(location.X, location.Y - 1), touching);
+        AddTileTypeAtLocation(new Point(location.X - 1, location.Y), touching);
+        if (includeDiagonal)
+        {
+            AddTileTypeAtLocation(new Point(location.X + 1, location.Y + 1), touching);
+            AddTileTypeAtLocation(new Point(location.X + 1, location.Y - 1), touching);
+            AddTileTypeAtLocation(new Point(location.X - 1, location.Y - 1), touching);
+            AddTileTypeAtLocation(new Point(location.X - 1, location.Y + 1), touching);
+        }
+
+        var touchingSameTypePairs = touching.Where(x => x.Value != null && types.Contains(x.Value.GetValueOrDefault())).ToList();
+        var touchingSameType = touchingSameTypePairs.Select(x => x.Key).ToList();
+        return touchingSameType;
+    }
+
+    private void AddTileTypeAtLocation(
+        Point location,
+        Dictionary<Point, TileType?> points)
+    {
+        var tileType = default(TileType?);
+        if (!(location.X < 0 || location.X > Width - 1 ||
+            location.Y < 0 || location.Y > Height - 1))
+        {
+            tileType = _terrainTiles[location.X, location.Y];
+        }
+
+        points.Add(location, tileType);
     }
 }
