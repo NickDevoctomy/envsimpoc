@@ -13,5 +13,10 @@ public class MapEditor : Editor
         {
             map.Generate();
         }
+
+        if (GUILayout.Button("Initialise Zones"))
+        {
+            map.InitialiseZones();
+        }
     }
 }

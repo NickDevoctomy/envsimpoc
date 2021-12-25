@@ -49,7 +49,7 @@ public class Map : MonoBehaviour
         CreateTiles();
         CreateTileCoverings();
         CreateWater();
-        InitialiseZones();
+        //InitialiseZones();
     }
 
     private void CleanUp()
@@ -218,7 +218,7 @@ public class Map : MonoBehaviour
         }
     }
 
-    private void InitialiseZones()
+    public void InitialiseZones()
     {
         _zones = new List<List<Point>>();
         _allZonedPoints = new List<Point>();
@@ -265,7 +265,7 @@ public class Map : MonoBehaviour
             terrainTiles,
             tileTypes,
             false);
-        var checkedPoints = new List<Point>();
+        var checkedPoints = new List<Point>{ location };
         var pointsToCheck = eligableNeigbours.ToList();
         while(pointsToCheck.Count > 0)
         {
