@@ -6,8 +6,8 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class Map : MonoBehaviour
 {
-    [Range(2,200)] public int Width = 100;
-    [Range(2, 200)] public int Height = 100;
+    [Range(2, 200)] public int Width = 200;
+    [Range(2, 200)] public int Height = 200;
     public int Seed;
 
     public GameObject LandTerrainPrefab;
@@ -141,7 +141,7 @@ public class Map : MonoBehaviour
             for (int y = 0; y < Height; y++)
             {
                 var height = grassLayer[grassIndex];
-                if (height > 0.2f && height < 0.75f)
+                if (height > 0.2f && height < 0.6f)
                 {
                     if (_terrainTiles[x, y] == TileType.Land)
                     {
