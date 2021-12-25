@@ -33,15 +33,9 @@ public class Map : MonoBehaviour
         Generate();
     }
 
-    private void OnDrawGizmos()
-    {
-        //Gizmos.color = UnityEngine.Color.red;
-        //foreach (var curPoint in _test)
-        //{
-        //    var location = new Vector3(curPoint.X, 2, curPoint.Y);
-        //    Gizmos.DrawSphere(location, 0.1f);
-        //}
-    }
+    //private void OnDrawGizmos()
+    //{
+    //}
 
     public void Generate()
     {
@@ -220,30 +214,48 @@ public class Map : MonoBehaviour
 
     public void InitialiseZones()
     {
+        var total = new System.Diagnostics.Stopwatch();
+        total.Start();
+        Debug.Log($"Started: Initialising zones @ {System.DateTime.Now}");
         _zones = new List<List<Point>>();
         _allZonedPoints = new List<Point>();
-        var curPoint = GetNextUnzonedPoint();
+        var openTypes = new List<TileType> { TileType.Water, TileType.Land };
+        var closedTypes = new List<TileType> { TileType.Rock };
+        var curPoint = GetNextUnzonedPoint(new Point(0,0));
         while (curPoint != null)
         {
+            var zone = new System.Diagnostics.Stopwatch();
+            zone.Start();
+            Debug.Log($"Started: Initialising zones {_zones.Count} @ {System.DateTime.Now}");
             var curPointType = _terrainTiles[curPoint.GetValueOrDefault().X, curPoint.GetValueOrDefault().Y];
             var curZone = GetTileTypeZoneFromPoint(
                 curPoint.GetValueOrDefault(),
-                curPointType == TileType.Water || curPointType == TileType.Land ?   
-                    new List<TileType> { TileType.Water, TileType.Land } :
-                    new List<TileType> { TileType.Rock },
+                curPointType == TileType.Rock ? closedTypes : openTypes,
                 _terrainTiles);
+            Debug.Log($"Finished: Initialised zone {_zones.Count} after {zone.Elapsed}");
             _zones.Add(curZone);
             _allZonedPoints.AddRange(curZone);
-            curPoint = GetNextUnzonedPoint();
+            curPoint = GetNextUnzonedPoint(curPoint.GetValueOrDefault());
         }
+        total.Stop();
+        Debug.Log($"Finished: Initialised {_zones.Count} zones after {total.Elapsed}");
     }
 
-    private Point? GetNextUnzonedPoint()
+    private Point? GetNextUnzonedPoint(Point from)
     {
+        bool start = true;
         for (int x = 0; x < Width; x++)
         {
+
             for (int y = 0; y < Height; y++)
             {
+                if (start)
+                {
+                    x = from.X;
+                    y = from.Y;
+                    start = false;
+                }
+
                 var curPoint = new Point(x, y);
                 if(!_allZonedPoints.Contains(curPoint))
                 {
@@ -270,7 +282,7 @@ public class Map : MonoBehaviour
         while(pointsToCheck.Count > 0)
         {
             var points = pointsToCheck.ToArray();
-            foreach(var curPoint in points)
+            foreach (var curPoint in points)
             {
                 pointsToCheck.Remove(curPoint);
 
@@ -314,7 +326,7 @@ public class Map : MonoBehaviour
             AddTileTypeAtLocation(new Point(location.X - 1, location.Y + 1), touching);
         }
 
-        var touchingSameTypePairs = touching.Where(x => x.Value != null && types.Contains(x.Value.GetValueOrDefault())).ToList();
+        var touchingSameTypePairs = touching.Where(x => types.Contains(x.Value.GetValueOrDefault())).ToList();
         var touchingSameType = touchingSameTypePairs.Select(x => x.Key).ToList();
         return touchingSameType;
     }
@@ -323,6 +335,11 @@ public class Map : MonoBehaviour
         Point location,
         Dictionary<Point, TileType?> points)
     {
+        if(_allZonedPoints.Contains(location))
+        {
+            return;
+        }
+
         var tileType = default(TileType?);
         if (!(location.X < 0 || location.X > Width - 1 ||
             location.Y < 0 || location.Y > Height - 1))
@@ -330,6 +347,9 @@ public class Map : MonoBehaviour
             tileType = _terrainTiles[location.X, location.Y];
         }
 
-        points.Add(location, tileType);
+        if(tileType != null)
+        {
+            points.Add(location, tileType);
+        }
     }
 }
