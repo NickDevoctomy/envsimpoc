@@ -23,6 +23,8 @@ public class Map : MonoBehaviour
     private List<List<Point>> _zones;
     private List<Point> _allZonedPoints;
 
+    private List<GameObject> _allLand = new List<GameObject>();
+
     void Start()
     {
         Generate();
@@ -44,6 +46,35 @@ public class Map : MonoBehaviour
         CreateTileCoverings();
         CreateWater();
         //InitialiseZones();
+    }
+
+    public void InitialiseZones()
+    {
+        var total = new System.Diagnostics.Stopwatch();
+        total.Start();
+        Debug.Log($"Started: Initialising zones @ {System.DateTime.Now}");
+        _zones = new List<List<Point>>();
+        _allZonedPoints = new List<Point>();
+        var openTypes = new List<TileType> { TileType.Water, TileType.Land };
+        var closedTypes = new List<TileType> { TileType.Rock };
+        var curPoint = GetNextUnzonedPoint(new Point(0, 0));
+        while (curPoint != null)
+        {
+            var zone = new System.Diagnostics.Stopwatch();
+            zone.Start();
+            Debug.Log($"Started: Initialising zones {_zones.Count} @ {System.DateTime.Now}");
+            var curPointType = _terrainTiles[curPoint.GetValueOrDefault().X, curPoint.GetValueOrDefault().Y];
+            var curZone = GetTileTypeZoneFromPoint(
+                curPoint.GetValueOrDefault(),
+                curPointType == TileType.Rock ? closedTypes : openTypes,
+                _terrainTiles);
+            Debug.Log($"Finished: Initialised zone {_zones.Count} after {zone.Elapsed}");
+            _zones.Add(curZone);
+            _allZonedPoints.AddRange(curZone);
+            curPoint = GetNextUnzonedPoint(curPoint.GetValueOrDefault());
+        }
+        total.Stop();
+        Debug.Log($"Finished: Initialised {_zones.Count} zones after {total.Elapsed}");
     }
 
     private void CleanUp()
@@ -74,6 +105,7 @@ public class Map : MonoBehaviour
             Seed,
             Width,
             Height);
+        _allLand = new List<GameObject>();
 
         var terrainIndex = 0;
         for (int x = 0; x < Width; x++)
@@ -87,6 +119,10 @@ public class Map : MonoBehaviour
                     CreateTile(TileType.Land, new Vector2(x, y));
                 }
                 var tile = CreateTile(tileType, new Vector2(x, y));
+                if(tileType == TileType.Land)
+                {
+                    _allLand.Add(tile);
+                }
                 _terrainTiles[x, y] = tileType;
                 terrainIndex += 1;
             }
@@ -210,35 +246,6 @@ public class Map : MonoBehaviour
                     throw new System.NotImplementedException($"Tile type of '{tileType}' not implemented.");
                 }
         }
-    }
-
-    public void InitialiseZones()
-    {
-        var total = new System.Diagnostics.Stopwatch();
-        total.Start();
-        Debug.Log($"Started: Initialising zones @ {System.DateTime.Now}");
-        _zones = new List<List<Point>>();
-        _allZonedPoints = new List<Point>();
-        var openTypes = new List<TileType> { TileType.Water, TileType.Land };
-        var closedTypes = new List<TileType> { TileType.Rock };
-        var curPoint = GetNextUnzonedPoint(new Point(0,0));
-        while (curPoint != null)
-        {
-            var zone = new System.Diagnostics.Stopwatch();
-            zone.Start();
-            Debug.Log($"Started: Initialising zones {_zones.Count} @ {System.DateTime.Now}");
-            var curPointType = _terrainTiles[curPoint.GetValueOrDefault().X, curPoint.GetValueOrDefault().Y];
-            var curZone = GetTileTypeZoneFromPoint(
-                curPoint.GetValueOrDefault(),
-                curPointType == TileType.Rock ? closedTypes : openTypes,
-                _terrainTiles);
-            Debug.Log($"Finished: Initialised zone {_zones.Count} after {zone.Elapsed}");
-            _zones.Add(curZone);
-            _allZonedPoints.AddRange(curZone);
-            curPoint = GetNextUnzonedPoint(curPoint.GetValueOrDefault());
-        }
-        total.Stop();
-        Debug.Log($"Finished: Initialised {_zones.Count} zones after {total.Elapsed}");
     }
 
     private Point? GetNextUnzonedPoint(Point from)
