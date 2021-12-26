@@ -296,6 +296,7 @@ MonoBehaviour:
   LandTerrainPrefab: {fileID: 2744642595978262394, guid: 14893f2affd899f428f9c6fad9eebd00, type: 3}
   RockTerrainPrefab: {fileID: 4572057220122724199, guid: 6fa37051cc1e1e644bb1af18174a973a, type: 3}
   GrassCoveringPrefab: {fileID: 1998247890033688322, guid: fd1f09ce7339f974abf2500fc4aeca0f, type: 3}
+  WaterPlanePrefab: {fileID: 643382416359696120, guid: 1219492d541160b4aad8b40025f357de, type: 3}
   WaterSurfaceMaterial: {fileID: 2100000, guid: 656fde119942645aa8e062e04c119aa1, type: 2}
   WaterBedMaterial: {fileID: 2100000, guid: a64789723d9b19c47ae351e74940c78d, type: 2}
   LandMaterial: {fileID: 2100000, guid: cf04d542953d8204b9bd420956dbec1a, type: 2}

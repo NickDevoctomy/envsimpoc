@@ -13,6 +13,7 @@ public class Map : MonoBehaviour
     public GameObject LandTerrainPrefab;
     public GameObject RockTerrainPrefab;
     public GameObject GrassCoveringPrefab;
+    public GameObject WaterPlanePrefab;
     public Material WaterSurfaceMaterial;
     public Material WaterBedMaterial;
     public Material LandMaterial;
@@ -221,20 +222,16 @@ public class Map : MonoBehaviour
 
     private void CreateWater()
     {
-        var scale = new Vector3((Width / 10) + 5, 1, (Height / 10) + 5);
-
-        var waterSurface = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        var waterSurface = Instantiate(WaterPlanePrefab);
         waterSurface.name = "WaterSurface";
         waterSurface.transform.parent = _water.transform;
-        waterSurface.transform.localScale = scale;
-        waterSurface.transform.position = new Vector3(-0.5f + (Width / 2), GetYOffsetFromTileType(TileType.Water) + 1f, -0.5f + (Height / 2));
-        var waterSurfaceRender = waterSurface.GetComponent<Renderer>();
-        waterSurfaceRender.material = WaterSurfaceMaterial;
+        waterSurface.transform.localScale = new Vector3(2.2f, 1, 2.2f);
+        waterSurface.transform.position = new Vector3(Width / 2, GetYOffsetFromTileType(TileType.Water) + 1f, Height / 2);
 
         var waterBed = GameObject.CreatePrimitive(PrimitiveType.Plane);
         waterBed.name = "WaterBed";
         waterBed.transform.parent = _water.transform;
-        waterBed.transform.localScale = scale;
+        waterBed.transform.localScale = new Vector3((Width / 10) + 5, 1, (Height / 10) + 5);
         waterBed.transform.position = new Vector3(-0.5f + (Width / 2), GetYOffsetFromTileType(TileType.Water) + 0.5f, -0.5f + (Height / 2));
         var waterBedRender = waterBed.GetComponent<Renderer>();
         waterBedRender.material = WaterBedMaterial;
