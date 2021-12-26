@@ -14,7 +14,6 @@ public class Map : MonoBehaviour
     public GameObject RockTerrainPrefab;
     public GameObject GrassCoveringPrefab;
     public GameObject WaterPlanePrefab;
-    public Material WaterSurfaceMaterial;
     public Material WaterBedMaterial;
     public Material LandMaterial;
 
@@ -225,8 +224,8 @@ public class Map : MonoBehaviour
         var waterSurface = Instantiate(WaterPlanePrefab);
         waterSurface.name = "WaterSurface";
         waterSurface.transform.parent = _water.transform;
-        waterSurface.transform.localScale = new Vector3(2.2f, 1, 2.2f);
-        waterSurface.transform.position = new Vector3(Width / 2, GetYOffsetFromTileType(TileType.Water) + 1f, Height / 2);
+        waterSurface.transform.localScale = new Vector3((Width / 100) * 4, 1, (Height / 100) * 2);
+        waterSurface.transform.position = new Vector3(Width / 2, GetYOffsetFromTileType(TileType.Water) + 0.9f, Height / 2);
 
         var waterBed = GameObject.CreatePrimitive(PrimitiveType.Plane);
         waterBed.name = "WaterBed";
