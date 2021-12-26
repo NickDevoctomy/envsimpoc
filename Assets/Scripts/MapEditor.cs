@@ -14,9 +14,9 @@ public class MapEditor : Editor
             map.Generate();
         }
 
-        if (GUILayout.Button("Initialise Zones"))
+        if (GUILayout.Button("Initialise Islands"))
         {
-            map.InitialiseZones();
+            map.InitialiseIslands();
         }
     }
 }

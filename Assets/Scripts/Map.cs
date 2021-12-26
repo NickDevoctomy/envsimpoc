@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Linq;
 using UnityEngine;
 
-[ExecuteInEditMode]
+//[ExecuteInEditMode]
 public class Map : MonoBehaviour
 {
     [Range(2, 200)] public int Width = 200;
@@ -13,7 +13,9 @@ public class Map : MonoBehaviour
     public GameObject LandTerrainPrefab;
     public GameObject RockTerrainPrefab;
     public GameObject GrassCoveringPrefab;
-    public Material WaterMaterial;
+    public Material WaterSurfaceMaterial;
+    public Material WaterBedMaterial;
+    public Material LandMaterial;
 
     private PerlinNoiseMapGenerator _perlinNoiseMapGenerator = new PerlinNoiseMapGenerator();
     private GameObject _terrain;
@@ -22,8 +24,9 @@ public class Map : MonoBehaviour
     private TileType[,] _terrainTiles;
     private List<List<Point>> _zones;
     private List<Point> _allZonedPoints;
+    private List<List<Point>> _islands;
 
-    private List<GameObject> _allLand = new List<GameObject>();
+    private Dictionary<Point, GameObject> _allLand;
 
     void Start()
     {
@@ -45,6 +48,8 @@ public class Map : MonoBehaviour
         CreateTiles();
         CreateTileCoverings();
         CreateWater();
+        InitialiseIslands();
+        MergeAllIslands();
         //InitialiseZones();
     }
 
@@ -105,7 +110,7 @@ public class Map : MonoBehaviour
             Seed,
             Width,
             Height);
-        _allLand = new List<GameObject>();
+        _allLand = new Dictionary<Point, GameObject>();
 
         var terrainIndex = 0;
         for (int x = 0; x < Width; x++)
@@ -116,16 +121,72 @@ public class Map : MonoBehaviour
                 var tileType = GetTileTypeFromHeight(height);
                 if (tileType == TileType.Rock)
                 {
-                    CreateTile(TileType.Land, new Vector2(x, y));
+                    var landTile = CreateTile(TileType.Land, new Vector2(x, y));
+                    _allLand.Add(new Point(x, y), landTile);
                 }
                 var tile = CreateTile(tileType, new Vector2(x, y));
                 if(tileType == TileType.Land)
                 {
-                    _allLand.Add(tile);
+                    _allLand.Add(new Point(x, y), tile);
                 }
                 _terrainTiles[x, y] = tileType;
                 terrainIndex += 1;
             }
+        }
+    }
+
+    public void InitialiseIslands()
+    {
+        var allLandCopy = _allLand.ToDictionary(x => x.Key, x => x.Value);
+        _islands = new List<List<Point>>();
+        foreach(var curPoint in allLandCopy.Keys.ToArray())
+        {
+            if(!allLandCopy.ContainsKey(curPoint))
+            {
+                continue;
+            }
+
+            var curIslandPoints = GetTileTypeZoneFromPoint(
+                curPoint,
+                new List<TileType> { TileType.Land, TileType.Rock },
+                _terrainTiles);
+            _islands.Add(curIslandPoints);
+            curIslandPoints.ForEach(x => allLandCopy.Remove(x));
+        }
+    }
+
+    public void MergeAllIslands()
+    {
+        for(int i = 0; i < _islands.Count; i++)
+        {
+            MergeIsland(i);
+        }
+    }
+
+    public void MergeIsland(int island)
+    {
+        if(island >= 0 && island < _islands.Count)
+        {
+            var islandPoints = _islands[island];
+            var allTiles = islandPoints.Select(x => _allLand[x].transform).ToList();
+            var allMeshFilters = allTiles.Select(x => x.transform.Find("Cube").GetComponent<MeshFilter>()).ToList();
+            CombineInstance[] combine = new CombineInstance[allMeshFilters.Count];
+            for(var i = 0; i < allMeshFilters.Count; i++)
+            {
+                combine[i].mesh = allMeshFilters[i].sharedMesh;
+                combine[i].transform = allMeshFilters[i].transform.localToWorldMatrix;
+                allMeshFilters[i].gameObject.SetActive(false);
+            }
+            var merged = new GameObject($"Island{island}");
+            merged.transform.parent = _terrain.transform;
+            var mergedMeshFilter = merged.AddComponent<MeshFilter>();
+            mergedMeshFilter.mesh = new Mesh();
+            mergedMeshFilter.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            mergedMeshFilter.sharedMesh.CombineMeshes(combine);
+            var mergedMeshRenderer = merged.AddComponent<MeshRenderer>();
+            mergedMeshRenderer.material = LandMaterial;
+            allTiles.ForEach(x => GameObject.DestroyImmediate(x.gameObject));
+            merged.gameObject.SetActive(true);
         }
     }
 
@@ -160,13 +221,23 @@ public class Map : MonoBehaviour
 
     private void CreateWater()
     {
-        var water = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        water.name = "Water";
-        water.transform.parent = _water.transform;
-        water.transform.localScale = new Vector3(Width, 1, Height);
-        water.transform.position = new Vector3(-0.5f + (Width / 2), GetYOffsetFromTileType(TileType.Water), -0.5f + (Height / 2));
-        var render = water.GetComponent<Renderer>();
-        render.material = WaterMaterial;
+        var scale = new Vector3((Width / 10) + 5, 1, (Height / 10) + 5);
+
+        var waterSurface = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        waterSurface.name = "WaterSurface";
+        waterSurface.transform.parent = _water.transform;
+        waterSurface.transform.localScale = scale;
+        waterSurface.transform.position = new Vector3(-0.5f + (Width / 2), GetYOffsetFromTileType(TileType.Water) + 1f, -0.5f + (Height / 2));
+        var waterSurfaceRender = waterSurface.GetComponent<Renderer>();
+        waterSurfaceRender.material = WaterSurfaceMaterial;
+
+        var waterBed = GameObject.CreatePrimitive(PrimitiveType.Plane);
+        waterBed.name = "WaterBed";
+        waterBed.transform.parent = _water.transform;
+        waterBed.transform.localScale = scale;
+        waterBed.transform.position = new Vector3(-0.5f + (Width / 2), GetYOffsetFromTileType(TileType.Water) + 0.5f, -0.5f + (Height / 2));
+        var waterBedRender = waterBed.GetComponent<Renderer>();
+        waterBedRender.material = WaterBedMaterial;
     }
 
     private GameObject CreateTile(
@@ -342,10 +413,10 @@ public class Map : MonoBehaviour
         Point location,
         Dictionary<Point, TileType?> points)
     {
-        if(_allZonedPoints.Contains(location))
-        {
-            return;
-        }
+        //if(_allZonedPoints.Contains(location))
+        //{
+        //    return;
+        //}
 
         var tileType = default(TileType?);
         if (!(location.X < 0 || location.X > Width - 1 ||
