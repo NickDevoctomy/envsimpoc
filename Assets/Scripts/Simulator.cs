@@ -4,16 +4,16 @@ using UnityEngine;
 
 public class Simulator : MonoBehaviour
 {
-    public Map? Map { get; private set; }
+    public Map Map { get; private set; }
 
     private EffectLayerManager _effectLayerManager;
-    private TemperatureEffectLayerManagerEffector? _temperatureEffectLayerManagerEffector;
+    private TemperatureEffectLayerManagerEffector _temperatureEffectLayerManagerEffector;
 
     void Start()
     {
         Map = GetComponent<Map>();
         _effectLayerManager = new EffectLayerManager(Map);
-        _effectLayerManager.CreateFloatLayer("temperature", 0.0f);
+        _effectLayerManager.CreateLayer<Monitor>("temperature");
         _temperatureEffectLayerManagerEffector = new TemperatureEffectLayerManagerEffector();
     }
 
@@ -24,35 +24,28 @@ public class Simulator : MonoBehaviour
             return;
         }
 
-        var tempLayer = _effectLayerManager.GetLayer("temperature");
         if (_temperatureEffectLayerManagerEffector.IsReady)
         {
+            var tempLayer = _effectLayerManager.GetLayer<Monitor>("temperature");
             _temperatureEffectLayerManagerEffector.Update(Map, tempLayer);
-            ApplyToMonitors(tempLayer);
         }
     }
 
     public void Test()
     {
-        var layer = _effectLayerManager.GetLayer("temperature");
-        layer[0][0, 0] = 100f;
-    }
-
-    private void ApplyToMonitors(Dictionary<int, float?[,]> layer)
-    {
-        foreach(var curZone in layer.Keys)
+        var layer = _effectLayerManager.GetLayer<Monitor>("temperature");
+        int count = 0;
+        for (int x = 0; x < Map.Width; x++)
         {
-            var zone = layer[curZone];
-            for (int x = 0; x < Map.Width; x++)
+            for (int y = 0; y < Map.Height; y++)
             {
-                for (int y = 0; y < Map.Height; y++)
+                if(layer[0][x, y] != null)
                 {
-                    if (Map.Monitors[x, y] != null && zone[x, y] != null)
-                    {
-                        Map.Monitors[x, y].GetComponent<Monitor>().Temperature = zone[x, y].GetValueOrDefault();
-                    }
+                    count += 1;
                 }
             }
         }
+        UnityEngine.Debug.Log($"Nodes in layer = {count}");
+        layer[0][0, 0].Temperature = (count * 100);
     }
 }
