@@ -240,8 +240,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 619701357}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: 0.39758745, z: -0, w: 0.91756433}
+  m_LocalPosition: {x: 10.256621, y: 0, z: 9.613244}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 2089444703}
@@ -297,7 +297,7 @@ MonoBehaviour:
   RockTerrainPrefab: {fileID: 4572057220122724199, guid: 6fa37051cc1e1e644bb1af18174a973a, type: 3}
   GrassCoveringPrefab: {fileID: 1998247890033688322, guid: fd1f09ce7339f974abf2500fc4aeca0f, type: 3}
   WaterPlanePrefab: {fileID: 100006, guid: 843740dbe549a4a6ba9556d1b80001f5, type: 3}
-  WaterBedMaterial: {fileID: 2100000, guid: a64789723d9b19c47ae351e74940c78d, type: 2}
+  WaterBedMaterial: {fileID: 2100000, guid: 2785d3e261e963c4793fc5970256592e, type: 2}
   LandMaterial: {fileID: 2100000, guid: cf04d542953d8204b9bd420956dbec1a, type: 2}
 --- !u!4 &1734833453
 Transform:
