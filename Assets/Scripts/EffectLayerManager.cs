@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 
+//TODO: Refactor this to remove zones, only need layers
+
 internal class EffectLayerManager
 {
     private Dictionary<string, object> _layers = new Dictionary<string, object>();
@@ -48,19 +50,17 @@ internal class EffectLayerManager
         var newLayer = new Dictionary<int, T[,]>();
         _layers.Add(name, newLayer);
 
-        for(var i = 0; i < _map.Zones.Count; i++)
+        var layer = new T[_map.Width, _map.Height];
+        for (int x = 0; x < _map.Width; x++)
         {
-            var zoneTiles = _map.Zones[i];
-            var layer = new T[_map.Width, _map.Height];
-            foreach (var curTile in zoneTiles)
+            for (int y = 0; y < _map.Height; y++)
             {
-                if(_map.Monitors[curTile.X, curTile.Y] != null)
+                if (_map.Monitors[x, y] != null)
                 {
-                    layer[curTile.X, curTile.Y] = _map.Monitors[curTile.X, curTile.Y].GetComponent<T>();
+                    layer[x, y] = _map.Monitors[x, y].GetComponent<T>();
                 }
             }
-
-            newLayer.Add(i, layer);
         }
+        newLayer.Add(0, layer);
     }
 }

@@ -19,8 +19,6 @@ public class Map : MonoBehaviour
 
     public GameObject[,] Monitors { get; private set; }
 
-    public IReadOnlyList<IReadOnlyList<Point>> Zones => _zones;
-
     private PerlinNoiseMapGenerator _perlinNoiseMapGenerator = new PerlinNoiseMapGenerator();
     private float[] _terrainPoints;
     private GameObject _terrain;
@@ -28,8 +26,6 @@ public class Map : MonoBehaviour
     private GameObject _water;
     private GameObject _nodes;
     private TileType[,] _terrainTiles;
-    private List<List<Point>> _zones;
-    private List<Point> _allZonedPoints;
     private List<List<Point>> _islands;
 
     private Dictionary<Point, GameObject> _allLand;
@@ -53,28 +49,7 @@ public class Map : MonoBehaviour
         CreateWater();
         InitialiseIslands();
         MergeAllIslands();
-        InitialiseZones();
         CreateMonitorNodes();
-    }
-
-    public void InitialiseZones()
-    {
-        _zones = new List<List<Point>>();
-        _allZonedPoints = new List<Point>();
-        var openTypes = new List<TileType> { TileType.Water, TileType.Land };
-        var closedTypes = new List<TileType> { TileType.Rock };
-        var curPoint = GetNextUnzonedPoint(new Point(0, 0));
-        while (curPoint != null)
-        {
-            var curPointType = _terrainTiles[curPoint.GetValueOrDefault().X, curPoint.GetValueOrDefault().Y];
-            var curZone = GetTileTypeZoneFromPoint(
-                curPoint.GetValueOrDefault(),
-                curPointType == TileType.Rock ? closedTypes : openTypes,
-                _terrainTiles);
-            _zones.Add(curZone);
-            _allZonedPoints.AddRange(curZone);
-            curPoint = GetNextUnzonedPoint(curPoint.GetValueOrDefault());
-        }
     }
 
     private void CleanUp()
@@ -365,32 +340,6 @@ public class Map : MonoBehaviour
                     throw new System.NotImplementedException($"Tile type of '{tileType}' not implemented.");
                 }
         }
-    }
-
-    private Point? GetNextUnzonedPoint(Point from)
-    {
-        bool start = true;
-        for (int x = 0; x < Width; x++)
-        {
-
-            for (int y = 0; y < Height; y++)
-            {
-                if (start)
-                {
-                    x = from.X;
-                    y = from.Y;
-                    start = false;
-                }
-
-                var curPoint = new Point(x, y);
-                if(!_allZonedPoints.Contains(curPoint))
-                {
-                    return curPoint;
-                }
-            }
-        }
-
-        return null;
     }
 
     private List<Point> GetTileTypeZoneFromPoint(
