@@ -56,9 +56,9 @@ public class Monitor : MonoBehaviour
             }
 
             var material = _materials[_currentRounded];
-            if (_meshRenderer.material != material)
+            if (_meshRenderer.sharedMaterial != material)
             {
-                _meshRenderer.material = material;
+                _meshRenderer.sharedMaterial = material;
             }
             _lastRounded = _currentRounded;
         }
