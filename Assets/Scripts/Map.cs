@@ -18,6 +18,7 @@ public class Map : MonoBehaviour
     public Material LandMaterial;
 
     private PerlinNoiseMapGenerator _perlinNoiseMapGenerator = new PerlinNoiseMapGenerator();
+    private float[] _terrainPoints;
     private GameObject _terrain;
     private GameObject _coverings;
     private GameObject _water;
@@ -27,6 +28,7 @@ public class Map : MonoBehaviour
     private List<List<Point>> _islands;
 
     private Dictionary<Point, GameObject> _allLand;
+    private Dictionary<Point, GameObject> _allBedRock;
 
     void Start()
     {
@@ -106,29 +108,46 @@ public class Map : MonoBehaviour
     private void CreateTiles()
     {
         _terrainTiles = new TileType[Width, Height];
-        var terrainLayer = _perlinNoiseMapGenerator.Generate(
+        _terrainPoints = _perlinNoiseMapGenerator.Generate(
             Seed,
             Width,
             Height);
         _allLand = new Dictionary<Point, GameObject>();
+        _allBedRock = new Dictionary<Point, GameObject>();
 
         var terrainIndex = 0;
         for (int x = 0; x < Width; x++)
         {
             for (int y = 0; y < Height; y++)
             {
-                var height = terrainLayer[terrainIndex];
+                var height = _terrainPoints[terrainIndex];
                 var tileType = GetTileTypeFromHeight(height);
                 if (tileType == TileType.Rock)
                 {
-                    var landTile = CreateTile(TileType.Land, new Vector2(x, y));
+                    var landTile = CreateTile(TileType.Land, new Vector2(x, y), height);
                     _allLand.Add(new Point(x, y), landTile);
                 }
-                var tile = CreateTile(tileType, new Vector2(x, y));
-                if(tileType == TileType.Land)
+                var tile = CreateTile(tileType, new Vector2(x, y), height);
+                switch(tileType)
                 {
-                    _allLand.Add(new Point(x, y), tile);
-                }
+                    case TileType.Land:
+                        {
+                            _allLand.Add(new Point(x, y), tile);
+                            break;
+                        }
+
+                    case TileType.Water:
+                        {
+                            _allBedRock.Add(new Point(x, y), tile);
+                            break;
+                        }
+
+                    default:
+                        {
+                            break;
+                        }
+                }               
+
                 _terrainTiles[x, y] = tileType;
                 terrainIndex += 1;
             }
@@ -225,30 +244,44 @@ public class Map : MonoBehaviour
         waterSurface.name = "WaterSurface";
         waterSurface.transform.parent = _water.transform;
         waterSurface.transform.localScale = new Vector3((Width / 100) * 4, 1, (Height / 100) * 2);
-        waterSurface.transform.position = new Vector3(Width / 2, GetYOffsetFromTileType(TileType.Water) + 0.9f, Height / 2);
+        waterSurface.transform.position = new Vector3(Width / 2, 0.9f, Height / 2);
 
-        var waterBed = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        waterBed.name = "WaterBed";
-        waterBed.transform.parent = _water.transform;
-        waterBed.transform.localScale = new Vector3((Width / 10) + 5, 1, (Height / 10) + 5);
-        waterBed.transform.position = new Vector3(-0.5f + (Width / 2), GetYOffsetFromTileType(TileType.Water) + 0.5f, -0.5f + (Height / 2));
-        var waterBedRender = waterBed.GetComponent<Renderer>();
-        waterBedRender.material = WaterBedMaterial;
+
+        var bedRockMeshFilters = _allBedRock.Values.Select(x => x.transform.Find("Cube").GetComponent<MeshFilter>()).ToList();
+        CombineInstance[] combine = new CombineInstance[bedRockMeshFilters.Count];
+        for (var i = 0; i < bedRockMeshFilters.Count; i++)
+        {
+            combine[i].mesh = bedRockMeshFilters[i].sharedMesh;
+            combine[i].transform = bedRockMeshFilters[i].transform.localToWorldMatrix;
+            bedRockMeshFilters[i].gameObject.SetActive(false);
+        }
+
+        var mergedBedRock = new GameObject("BedRock");
+        mergedBedRock.transform.parent = _terrain.transform;
+        var mergedMeshFilter = mergedBedRock.AddComponent<MeshFilter>();
+        mergedMeshFilter.mesh = new Mesh();
+        mergedMeshFilter.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+        mergedMeshFilter.sharedMesh.CombineMeshes(combine);
+        var mergedMeshRenderer = mergedBedRock.AddComponent<MeshRenderer>();
+        mergedMeshRenderer.material = WaterBedMaterial;
+        mergedBedRock.gameObject.SetActive(true);
+        _allBedRock.Values.ToList().ForEach(x => GameObject.DestroyImmediate(x.gameObject));
     }
 
     private GameObject CreateTile(
         TileType tileType,
-        Vector2 location)
+        Vector2 location,
+        float terrainPoint)
     {
-        if(tileType == TileType.Water)
-        {
-            return null;
-        }
-
         var tile = GameObject.Instantiate(GetPrefabFromTileType(tileType));
         tile.name = $"{location.x}-{location.y}_{tileType}";
         tile.transform.parent = _terrain.transform;
-        tile.transform.position = new Vector3(location.x, GetYOffsetFromTileType(tileType), location.y);
+        tile.transform.position = new Vector3(location.x, GetYOffsetFromTileType(tileType, terrainPoint), location.y);
+        if(tileType == TileType.Land)
+        {
+            tile.transform.localScale = new Vector3(1, 10, 1);
+        }
+
         return tile;
     }
 
@@ -272,6 +305,11 @@ public class Map : MonoBehaviour
     {
         switch(tileType)
         {
+            case TileType.Water:
+                {
+                    return LandTerrainPrefab;
+                }
+
             case TileType.Land:
                 {
                     return LandTerrainPrefab;
@@ -289,18 +327,20 @@ public class Map : MonoBehaviour
         }
     }
 
-    private float GetYOffsetFromTileType(TileType tileType)
+    private float GetYOffsetFromTileType(
+        TileType tileType,
+        float terrainPoint)
     {
         switch (tileType)
         {
             case TileType.Water:
                 {
-                    return 0f;
+                    return -(terrainPoint * 10) - 1f;
                 }
 
             case TileType.Land:
                 {
-                    return 1f;
+                    return 1f - 4.5f;
                 }
 
             case TileType.Rock:
