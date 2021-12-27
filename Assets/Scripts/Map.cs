@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Linq;
 using UnityEngine;
 
-//[ExecuteInEditMode]
 public class Map : MonoBehaviour
 {
     [Range(2, 200)] public int Width = 200;
@@ -14,6 +13,7 @@ public class Map : MonoBehaviour
     public GameObject RockTerrainPrefab;
     public GameObject GrassCoveringPrefab;
     public GameObject WaterPlanePrefab;
+    public GameObject MonitorNodePrefab;
     public Material WaterBedMaterial;
     public Material LandMaterial;
 
@@ -22,6 +22,7 @@ public class Map : MonoBehaviour
     private GameObject _terrain;
     private GameObject _coverings;
     private GameObject _water;
+    private GameObject _nodes;
     private TileType[,] _terrainTiles;
     private List<List<Point>> _zones;
     private List<Point> _allZonedPoints;
@@ -40,10 +41,6 @@ public class Map : MonoBehaviour
         Generate();
     }
 
-    //private void OnDrawGizmos()
-    //{
-    //}
-
     public void Generate()
     {
         CleanUp();
@@ -52,7 +49,7 @@ public class Map : MonoBehaviour
         CreateWater();
         InitialiseIslands();
         MergeAllIslands();
-        //InitialiseZones();
+        CreateMonitorNodes();
     }
 
     public void InitialiseZones()
@@ -283,6 +280,23 @@ public class Map : MonoBehaviour
         }
 
         return tile;
+    }
+
+    private void CreateMonitorNodes()
+    {
+        _nodes = AssureEmpty("Nodes");
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                if(_terrainTiles[x,y] != TileType.Rock)
+                {
+                    var monitorNode = Instantiate(MonitorNodePrefab);
+                    monitorNode.transform.parent = _nodes.transform;
+                    monitorNode.transform.position = new Vector3(x, 2.0f, y);
+                }
+            }
+        }
     }
 
     private TileType GetTileTypeFromHeight(float height)
