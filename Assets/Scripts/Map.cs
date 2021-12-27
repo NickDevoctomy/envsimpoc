@@ -17,6 +17,10 @@ public class Map : MonoBehaviour
     public Material WaterBedMaterial;
     public Material LandMaterial;
 
+    public GameObject[,] Monitors { get; private set; }
+
+    public IReadOnlyList<IReadOnlyList<Point>> Zones => _zones;
+
     private PerlinNoiseMapGenerator _perlinNoiseMapGenerator = new PerlinNoiseMapGenerator();
     private float[] _terrainPoints;
     private GameObject _terrain;
@@ -49,14 +53,12 @@ public class Map : MonoBehaviour
         CreateWater();
         InitialiseIslands();
         MergeAllIslands();
+        InitialiseZones();
         CreateMonitorNodes();
     }
 
     public void InitialiseZones()
     {
-        var total = new System.Diagnostics.Stopwatch();
-        total.Start();
-        Debug.Log($"Started: Initialising zones @ {System.DateTime.Now}");
         _zones = new List<List<Point>>();
         _allZonedPoints = new List<Point>();
         var openTypes = new List<TileType> { TileType.Water, TileType.Land };
@@ -64,21 +66,15 @@ public class Map : MonoBehaviour
         var curPoint = GetNextUnzonedPoint(new Point(0, 0));
         while (curPoint != null)
         {
-            var zone = new System.Diagnostics.Stopwatch();
-            zone.Start();
-            Debug.Log($"Started: Initialising zones {_zones.Count} @ {System.DateTime.Now}");
             var curPointType = _terrainTiles[curPoint.GetValueOrDefault().X, curPoint.GetValueOrDefault().Y];
             var curZone = GetTileTypeZoneFromPoint(
                 curPoint.GetValueOrDefault(),
                 curPointType == TileType.Rock ? closedTypes : openTypes,
                 _terrainTiles);
-            Debug.Log($"Finished: Initialised zone {_zones.Count} after {zone.Elapsed}");
             _zones.Add(curZone);
             _allZonedPoints.AddRange(curZone);
             curPoint = GetNextUnzonedPoint(curPoint.GetValueOrDefault());
         }
-        total.Stop();
-        Debug.Log($"Finished: Initialised {_zones.Count} zones after {total.Elapsed}");
     }
 
     private void CleanUp()
@@ -284,6 +280,7 @@ public class Map : MonoBehaviour
 
     private void CreateMonitorNodes()
     {
+        Monitors = new GameObject[Width, Height];
         _nodes = AssureEmpty("Nodes");
         for (int x = 0; x < Width; x++)
         {
@@ -294,6 +291,7 @@ public class Map : MonoBehaviour
                     var monitorNode = Instantiate(MonitorNodePrefab);
                     monitorNode.transform.parent = _nodes.transform;
                     monitorNode.transform.position = new Vector3(x, 2.0f, y);
+                    Monitors[x, y] = monitorNode;
                 }
             }
         }
@@ -463,11 +461,6 @@ public class Map : MonoBehaviour
         Point location,
         Dictionary<Point, TileType?> points)
     {
-        //if(_allZonedPoints.Contains(location))
-        //{
-        //    return;
-        //}
-
         var tileType = default(TileType?);
         if (!(location.X < 0 || location.X > Width - 1 ||
             location.Y < 0 || location.Y > Height - 1))

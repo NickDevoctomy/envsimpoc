@@ -2,9 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class EnvironmentSimulator : MonoBehaviour
+public class Monitor : MonoBehaviour
 {
-    // Start is called before the first frame update
+    public float Temperature = 0;
+
     void Start()
     {
         

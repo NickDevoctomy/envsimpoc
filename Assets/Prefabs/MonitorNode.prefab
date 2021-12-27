@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2469765636367992802}
   - component: {fileID: 3166242994172229622}
   - component: {fileID: 6635069972533861835}
+  - component: {fileID: 378473449092201270}
   m_Layer: 0
   m_Name: MonitorNode
   m_TagString: Untagged
@@ -95,3 +96,15 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 0.5
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &378473449092201270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2593732421621589349}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f7eb725cc4e58b49847871b1b11a3f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

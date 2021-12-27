@@ -354,6 +354,7 @@ GameObject:
   - component: {fileID: 1734833453}
   - component: {fileID: 1734833452}
   - component: {fileID: 1734833454}
+  - component: {fileID: 1734833455}
   m_Layer: 0
   m_Name: Environment
   m_TagString: Untagged
@@ -373,8 +374,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d9c9fb4b04e3984bb3cf152682db10f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Width: 200
-  Height: 200
+  Width: 100
+  Height: 100
   Seed: 0
   LandTerrainPrefab: {fileID: 2744642595978262394, guid: 14893f2affd899f428f9c6fad9eebd00, type: 3}
   RockTerrainPrefab: {fileID: 4572057220122724199, guid: 6fa37051cc1e1e644bb1af18174a973a, type: 3}
@@ -411,3 +412,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Count: 0
   deltaTime: 0
+--- !u!114 &1734833455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1734833451}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 10d20f3c86974d44798f3003febd1967, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
