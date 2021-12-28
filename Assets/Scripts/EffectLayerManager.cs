@@ -12,16 +12,6 @@ internal class EffectLayerManager
         _map = map;
     }
 
-    //public Dictionary<int, T[,]> GetLayer<T>(string name)
-    //{
-    //    if (!_layers.ContainsKey(name))
-    //    {
-    //        return null;
-    //    }
-
-    //    return (Dictionary<int, T[,]>)_layers[name];
-    //}
-
     public T[,] GetLayer<T>(string name)
     {
         if(!_layers.ContainsKey(name))
@@ -31,24 +21,6 @@ internal class EffectLayerManager
 
         return (T[,])_layers[name];
     }
-
-    //public T[,] GetLayer<T>(string name, int zone)
-    //{
-    //    if (!_layers.ContainsKey(name))
-    //    {
-    //        return null;
-    //    }
-
-    //    var layer = (Dictionary<int, T[,]>)_layers[name];
-
-    //    if (!layer.ContainsKey(zone))
-    //    {
-
-    //        return null;
-    //    }
-
-    //    return layer[zone];
-    //}
 
     public void CreateLayer<T>(string name)
     {

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using UnityEngine;
 
 public class Monitor : MonoBehaviour
@@ -13,9 +14,10 @@ public class Monitor : MonoBehaviour
         West = 3
     }
 
-    public float Temperature = 0;
+    public float Temperature = 0f;
     public Point? Location;
     public IReadOnlyDictionary<Neighbour, Monitor> Neighbours => _neighbours;
+    public IReadOnlyList<Monitor> MonitorNeighbours => _neighbours.Values.ToList();
 
     private MeshRenderer _meshRenderer;
     private static object _lock = new object();
@@ -23,17 +25,35 @@ public class Monitor : MonoBehaviour
     private int _lastRounded = -1;
     private Dictionary<Neighbour, Monitor> _neighbours = new Dictionary<Neighbour, Monitor>();
     private bool _neighboursSet = false;
+    private float _nextTemperature = 0f;
+    private int _currentRounded = 0;
 
     void Start()
     {
         _meshRenderer = GetComponent<MeshRenderer>();
         CacheMaterials();
+        _nextTemperature = Temperature;
     }
 
-    // Update is called once per frame
     void Update()
     {
         UpdateMaterial();
+    }
+
+    public void IncreaseTemp(float value)
+    {
+        _nextTemperature += value;
+    }
+
+    public void DecreaseTemp(float value)
+    {
+        _nextTemperature -= value;
+    }
+
+    public void ApplyNextTemperature()
+    {
+        Temperature = _nextTemperature;
+        _currentRounded = Mathf.RoundToInt(Temperature);
     }
 
     public void SetAllNeighbours(Map map, Monitor[,] layer)
@@ -102,7 +122,6 @@ public class Monitor : MonoBehaviour
 
     private void UpdateMaterial()
     {
-        var _currentRounded = Mathf.RoundToInt(Temperature);
         if(_currentRounded != _lastRounded)
         {
             if(_currentRounded > 100)
@@ -110,11 +129,7 @@ public class Monitor : MonoBehaviour
                 _currentRounded = 100;
             }
 
-            var material = _materials[_currentRounded];
-            if (_meshRenderer.sharedMaterial != material)
-            {
-                _meshRenderer.sharedMaterial = material;
-            }
+            _meshRenderer.sharedMaterial = _materials[_currentRounded];
             _lastRounded = _currentRounded;
         }
     }
