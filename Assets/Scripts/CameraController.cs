@@ -6,6 +6,14 @@ public class CameraController : MonoBehaviour
     private float _rotateSpeed = 20f;
     private Vector3? _lastPosition = null;
 
+    private void Start()
+    {
+        if(Map.Instance != null)
+        {
+            transform.position = new Vector3(Map.Instance.Width / 2, 0, Map.Instance.Height / 2);
+        }
+    }
+
     void Update()
     {
         float rotation = Input.GetAxis("Horizontal") * _rotateSpeed;
