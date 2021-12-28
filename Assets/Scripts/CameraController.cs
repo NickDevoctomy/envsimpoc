@@ -34,17 +34,13 @@ public class CameraController : MonoBehaviour
 
     private void ActivateMonitors()
     {
-        var monitors = Map.Instance.Monitors;
-        for (int x = 0; x < Map.Instance.Width; x++)
+        for(int i = 0; i < Map.Instance.MonitorsList.Count; i++)
         {
-            for (int y = 0; y < Map.Instance.Height; y++)
+            var monitor = Map.Instance.MonitorsList[i];
+            if (monitor != null)
             {
-                var monitor = monitors[x, y];
-                if (monitor != null)
-                {
-                    var distSqr = (transform.position - monitor.transform.position).sqrMagnitude;
-                    monitor.SetActive(distSqr < 100f);
-                }
+                var distSqr = (transform.position - monitor.transform.position).sqrMagnitude;
+                monitor.SetActive(distSqr < 100f);
             }
         }
     }

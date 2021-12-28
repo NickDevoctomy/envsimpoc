@@ -20,6 +20,7 @@ public class Map : MonoBehaviour
     public Material LandMaterial;
 
     public GameObject[,] Monitors { get; private set; }
+    public List<GameObject> MonitorsList { get; private set; }
 
     private static Map _instance;
     private PerlinNoiseMapGenerator _perlinNoiseMapGenerator = new PerlinNoiseMapGenerator();
@@ -264,6 +265,7 @@ public class Map : MonoBehaviour
     private void CreateMonitorNodes()
     {
         Monitors = new GameObject[Width, Height];
+        MonitorsList = new List<GameObject>();
         _nodes = AssureEmpty("Nodes");
         for (int x = 0; x < Width; x++)
         {
@@ -278,6 +280,7 @@ public class Map : MonoBehaviour
                     monitorNode.GetComponent<Monitor>().Location = new Point(x, y);
                     Monitors[x, y] = monitorNode;
                     monitorNode.SetActive(false);
+                    MonitorsList.Add(monitorNode);
                 }
             }
         }

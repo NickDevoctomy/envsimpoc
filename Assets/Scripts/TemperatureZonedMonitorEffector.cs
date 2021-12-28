@@ -13,7 +13,6 @@ public class TemperatureEffectLayerManagerEffector : IEffectLayerManagerEffector
 
     public void Update(Map map, Monitor[,] layer)
     {
-        //var toUpdate = new List<Monitor>();
         for (var x = 0; x < map.Width; x++)
         {
             for (var y = 0; y < map.Height; y++)
