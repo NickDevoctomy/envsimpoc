@@ -144,8 +144,8 @@ public class Map : MonoBehaviour
     {
         TileGroups = new List<GameObject>();
         TilesGrouped = new List<List<GameObject>>();
-        int groupWidth = 10;
-        int groupHeight = 10;
+        int groupWidth = 20;
+        int groupHeight = 20;
         int maxX = Width / groupWidth;
         int maxY = Height / groupHeight;
         for (int x = 0; x < maxX; x++)

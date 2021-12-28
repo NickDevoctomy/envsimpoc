@@ -44,7 +44,7 @@ public class CameraController : MonoBehaviour
             var tileGroup = Map.Instance.TileGroups[i];
             if (tileGroup != null)
             {
-                tileGroup.SetActive((transform.position - tileGroup.transform.position).sqrMagnitude < 1000f);
+                tileGroup.SetActive((transform.position - tileGroup.transform.position).sqrMagnitude < 2000f);
             }
         }
     }
