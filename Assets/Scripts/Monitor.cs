@@ -58,13 +58,13 @@ public class Monitor : MonoBehaviour
         if(Mathf.Abs(Temperature - _nextTemperature) < 0.00001f)
         {
             IsAwake = false;
-            gameObject.SetActive(false);
+            //gameObject.SetActive(false);
             return;
         }
-        else
-        {
-            gameObject.SetActive(true);
-        }
+        //else
+        //{
+        //    gameObject.SetActive(true);
+        //}
 
         Temperature = _nextTemperature;
         _currentRounded = Mathf.RoundToInt(Temperature);

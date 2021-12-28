@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class Map : MonoBehaviour
 {
+    public static Map Instance => _instance;
+
     [Range(2, 200)] public int Width = 200;
     [Range(2, 200)] public int Height = 200;
     public int Seed;
@@ -19,6 +21,7 @@ public class Map : MonoBehaviour
 
     public GameObject[,] Monitors { get; private set; }
 
+    private static Map _instance;
     private PerlinNoiseMapGenerator _perlinNoiseMapGenerator = new PerlinNoiseMapGenerator();
     private float[] _terrainPoints;
     private GameObject _terrain;
@@ -30,6 +33,11 @@ public class Map : MonoBehaviour
 
     private Dictionary<Point, GameObject> _allLand;
     private Dictionary<Point, GameObject> _allBedRock;
+
+    public Map()
+    {
+        _instance = this;
+    }
 
     void Start()
     {
