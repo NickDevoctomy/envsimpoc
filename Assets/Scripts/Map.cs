@@ -144,17 +144,19 @@ public class Map : MonoBehaviour
     {
         TileGroups = new List<GameObject>();
         TilesGrouped = new List<List<GameObject>>();
-        int maxX = Width / 20;
-        int maxY = Height / 20;
+        int groupWidth = 10;
+        int groupHeight = 10;
+        int maxX = Width / groupWidth;
+        int maxY = Height / groupHeight;
         for (int x = 0; x < maxX; x++)
         {
             for (int y = 0; y < maxY; y++)
             {
                 var tileGroup = new GameObject($"{x}-{y}_TileGroup");
                 var groupedTiles = new List<GameObject>();
-                for (int subX = x * 20; subX < (x * 20) + 20; subX++)
+                for (int subX = x * groupWidth; subX < (x * groupWidth) + groupWidth; subX++)
                 {
-                    for (int subY = y * 20; subY < (y * 20) + 20; subY++)
+                    for (int subY = y * groupHeight; subY < (y * groupWidth) + groupWidth; subY++)
                     {
                         var tiles = _allTerrain[subX, subY];
                         groupedTiles.AddRange(tiles);
@@ -273,17 +275,19 @@ public class Map : MonoBehaviour
     {
         MonitorGroups = new List<GameObject>();
         MonitorsGrouped = new List<List<GameObject>>();
-        int maxX = Width / 20;
-        int maxY = Height / 20;
+        int groupWidth = 10;
+        int groupHeight = 10;
+        int maxX = Width / groupWidth;
+        int maxY = Height / groupHeight;
         for (int x = 0; x < maxX; x++)
         {
             for (int y = 0; y < maxY; y++)
             {
                 var monitorGroup = new GameObject($"{x}-{y}_MonitorGroup");
                 var groupedMonitors = new List<GameObject>();
-                for (int subX = x * 20; subX < (x * 20) + 20; subX++)
+                for (int subX = x * groupWidth; subX < (x * groupWidth) + groupWidth; subX++)
                 {
-                    for (int subY = y * 20; subY < (y * 20) + 20; subY++)
+                    for (int subY = y * groupHeight; subY < (y * groupHeight) + groupHeight; subY++)
                     {
                         if (Monitors[subX, subY] != null)
                         {
