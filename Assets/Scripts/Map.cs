@@ -264,13 +264,16 @@ public class Map : MonoBehaviour
                 if(_terrainTiles[x,y] != TileType.Rock)
                 {
                     var monitorNode = Instantiate(MonitorNodePrefab);
+                    monitorNode.name = $"{x}-{y}_Monitor";
                     monitorNode.transform.parent = _nodes.transform;
                     monitorNode.transform.position = new Vector3(x, 2.0f, y);
                     monitorNode.GetComponent<Monitor>().Location = new Point(x, y);
                     Monitors[x, y] = monitorNode;
+                    monitorNode.SetActive(false);
                 }
             }
         }
+        Monitor.CacheMaterials();
     }
 
     private TileType GetTileTypeFromHeight(float height)

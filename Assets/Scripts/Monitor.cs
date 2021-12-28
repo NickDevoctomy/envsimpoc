@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
 
 public class Monitor : MonoBehaviour
@@ -16,11 +17,15 @@ public class Monitor : MonoBehaviour
 
     public float Temperature = 0f;
     public Point? Location;
+
     public IReadOnlyDictionary<Neighbour, Monitor> Neighbours => _neighbours;
     public IReadOnlyList<Monitor> MonitorNeighbours => _neighbours.Values.ToList();
+    public bool IsAwake { get; private set; } = false;
+    public bool IsPendingUpdate { get; private set; } = false;
 
     private MeshRenderer _meshRenderer;
     private static object _lock = new object();
+    private static bool _cached = false;
     private static Dictionary<int, Material> _materials;
     private int _lastRounded = -1;
     private Dictionary<Neighbour, Monitor> _neighbours = new Dictionary<Neighbour, Monitor>();
@@ -31,29 +36,40 @@ public class Monitor : MonoBehaviour
     void Start()
     {
         _meshRenderer = GetComponent<MeshRenderer>();
-        CacheMaterials();
         _nextTemperature = Temperature;
-    }
-
-    void Update()
-    {
-        UpdateMaterial();
     }
 
     public void IncreaseTemp(float value)
     {
         _nextTemperature += value;
+        IsPendingUpdate = true;
+        IsAwake = true;
     }
 
     public void DecreaseTemp(float value)
     {
         _nextTemperature -= value;
+        IsPendingUpdate = true;
+        IsAwake = true;
     }
 
     public void ApplyNextTemperature()
     {
+        if(Mathf.Abs(Temperature - _nextTemperature) < 0.00001f)
+        {
+            IsAwake = false;
+            gameObject.SetActive(false);
+            return;
+        }
+        else
+        {
+            gameObject.SetActive(true);
+        }
+
         Temperature = _nextTemperature;
         _currentRounded = Mathf.RoundToInt(Temperature);
+        UpdateMaterial();
+        IsPendingUpdate = false;
     }
 
     public void SetAllNeighbours(Map map, Monitor[,] layer)
@@ -99,7 +115,7 @@ public class Monitor : MonoBehaviour
         _neighbours.Add(neighbour, monitor);
     }
 
-    private void CacheMaterials()
+    public static void CacheMaterials()
     {
         lock(_lock)
         {
@@ -117,12 +133,18 @@ public class Monitor : MonoBehaviour
                 material.color = new UnityEngine.Color(redComp, 0, blueComp, 1);
                 _materials.Add(i, material);
             }
+            _cached = true;
         }
     }
 
     private void UpdateMaterial()
     {
-        if(_currentRounded != _lastRounded)
+        if(_meshRenderer == null)
+        {
+            return;
+        }
+
+        if(_cached && _currentRounded != _lastRounded)
         {
             if(_currentRounded > 100)
             {

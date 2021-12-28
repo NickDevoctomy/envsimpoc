@@ -18,12 +18,12 @@ public class TemperatureEffectLayerManagerEffector : IEffectLayerManagerEffector
         {
             for (var y = 0; y < map.Height; y++)
             {
-                if (layer[x, y] == null)
+                var curTemp = layer[x, y];
+                if (curTemp == null || !curTemp.IsAwake)
                 {
                     continue;
                 }
 
-                var curTemp = layer[x, y];
                 var neighbours = curTemp.MonitorNeighbours;
                 for (var n = 0; n < neighbours.Count; n++)
                 {
@@ -36,15 +36,7 @@ public class TemperatureEffectLayerManagerEffector : IEffectLayerManagerEffector
                         curTemp.DecreaseTemp(transfer);
                     }
 
-                    //if (!toUpdate.Contains(neighbour))
-                    //{
-                    //    toUpdate.Add(neighbour);
-                    //}
                 }
-                //if(!toUpdate.Contains(curTemp))
-                //{
-                //    toUpdate.Add(curTemp);
-                //}
             }
         }
 
@@ -52,16 +44,15 @@ public class TemperatureEffectLayerManagerEffector : IEffectLayerManagerEffector
         {
             for (var y = 0; y < map.Height; y++)
             {
-                if (layer[x, y] == null)
+                var curTemp = layer[x, y];
+                if (layer[x, y] == null || !curTemp.IsAwake)
                 {
                     continue;
                 }
 
-                layer[x, y].ApplyNextTemperature();
+                curTemp.ApplyNextTemperature();
             }
         }
-
-        //toUpdate.ForEach(x => x.ApplyNextTemperature());
 
         _lastTick = Environment.TickCount;
     }

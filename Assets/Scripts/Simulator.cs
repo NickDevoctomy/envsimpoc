@@ -47,7 +47,7 @@ public class Simulator : MonoBehaviour
             }
         }
         UnityEngine.Debug.Log($"Nodes in layer = {count}");
-        layer[0, 0].Temperature = (count * 100);
+        layer[0, 0].IncreaseTemp(count * 100);
     }
 
     private void SetAllMonitorNeighbours()
