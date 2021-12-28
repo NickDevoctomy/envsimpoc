@@ -7,8 +7,8 @@ public class Map : MonoBehaviour
 {
     public static Map Instance => _instance;
 
-    [Range(2, 200)] public int Width = 200;
-    [Range(2, 200)] public int Height = 200;
+    [Range(2, 400)] public int Width = 200;
+    [Range(2, 400)] public int Height = 200;
     public int Seed;
 
     public GameObject LandTerrainPrefab;
@@ -32,7 +32,6 @@ public class Map : MonoBehaviour
     private GameObject _water;
     private GameObject _nodes;
     private TileType[,] _terrainTiles;
-    private List<List<Point>> _islands;
 
     private Dictionary<Point, GameObject> _allLand;
     private Dictionary<Point, GameObject> _allBedRock;
@@ -58,8 +57,6 @@ public class Map : MonoBehaviour
         CreateTiles();
         CreateTileCoverings();
         CreateWater();
-        InitialiseIslands();
-        MergeAllIslands();
         CreateMonitorNodes();
         GroupMonitors();
     }
@@ -131,61 +128,6 @@ public class Map : MonoBehaviour
                 _terrainTiles[x, y] = tileType;
                 terrainIndex += 1;
             }
-        }
-    }
-
-    public void InitialiseIslands()
-    {
-        var allLandCopy = _allLand.ToDictionary(x => x.Key, x => x.Value);
-        _islands = new List<List<Point>>();
-        foreach(var curPoint in allLandCopy.Keys.ToArray())
-        {
-            if(!allLandCopy.ContainsKey(curPoint))
-            {
-                continue;
-            }
-
-            var curIslandPoints = GetTileTypeZoneFromPoint(
-                curPoint,
-                new List<TileType> { TileType.Land, TileType.Rock },
-                _terrainTiles);
-            _islands.Add(curIslandPoints);
-            curIslandPoints.ForEach(x => allLandCopy.Remove(x));
-        }
-    }
-
-    public void MergeAllIslands()
-    {
-        for(int i = 0; i < _islands.Count; i++)
-        {
-            MergeIsland(i);
-        }
-    }
-
-    public void MergeIsland(int island)
-    {
-        if(island >= 0 && island < _islands.Count)
-        {
-            var islandPoints = _islands[island];
-            var allTiles = islandPoints.Select(x => _allLand[x].transform).ToList();
-            var allMeshFilters = allTiles.Select(x => x.transform.Find("Cube").GetComponent<MeshFilter>()).ToList();
-            CombineInstance[] combine = new CombineInstance[allMeshFilters.Count];
-            for(var i = 0; i < allMeshFilters.Count; i++)
-            {
-                combine[i].mesh = allMeshFilters[i].sharedMesh;
-                combine[i].transform = allMeshFilters[i].transform.localToWorldMatrix;
-                allMeshFilters[i].gameObject.SetActive(false);
-            }
-            var merged = new GameObject($"Island{island}");
-            merged.transform.parent = _terrain.transform;
-            var mergedMeshFilter = merged.AddComponent<MeshFilter>();
-            mergedMeshFilter.mesh = new Mesh();
-            mergedMeshFilter.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-            mergedMeshFilter.sharedMesh.CombineMeshes(combine);
-            var mergedMeshRenderer = merged.AddComponent<MeshRenderer>();
-            mergedMeshRenderer.material = LandMaterial;
-            allTiles.ForEach(x => GameObject.DestroyImmediate(x.gameObject));
-            merged.gameObject.SetActive(true);
         }
     }
 
@@ -282,7 +224,6 @@ public class Map : MonoBehaviour
                     monitorNode.transform.position = new Vector3(x, 2.0f, y);
                     monitorNode.GetComponent<Monitor>().Location = new Point(x, y);
                     Monitors[x, y] = monitorNode;
-                    //monitorNode.SetActive(false);
                     MonitorsList.Add(monitorNode);
                 }
             }

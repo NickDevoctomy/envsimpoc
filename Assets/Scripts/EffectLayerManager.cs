@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 
-//TODO: Refactor this to remove zones, only need layers
-
 internal class EffectLayerManager
 {
     private Dictionary<string, object> _layers = new Dictionary<string, object>();
