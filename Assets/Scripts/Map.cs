@@ -21,6 +21,8 @@ public class Map : MonoBehaviour
 
     public GameObject[,] Monitors { get; private set; }
     public List<GameObject> MonitorsList { get; private set; }
+    public List<List<GameObject>> MonitorsGrouped { get; private set; }
+    public List<GameObject> MonitorGroups { get; private set; }
 
     private static Map _instance;
     private PerlinNoiseMapGenerator _perlinNoiseMapGenerator = new PerlinNoiseMapGenerator();
@@ -59,6 +61,7 @@ public class Map : MonoBehaviour
         InitialiseIslands();
         MergeAllIslands();
         CreateMonitorNodes();
+        GroupMonitors();
     }
 
     private void CleanUp()
@@ -279,12 +282,49 @@ public class Map : MonoBehaviour
                     monitorNode.transform.position = new Vector3(x, 2.0f, y);
                     monitorNode.GetComponent<Monitor>().Location = new Point(x, y);
                     Monitors[x, y] = monitorNode;
-                    monitorNode.SetActive(false);
+                    //monitorNode.SetActive(false);
                     MonitorsList.Add(monitorNode);
                 }
             }
         }
         Monitor.CacheMaterials();
+    }
+
+    private void GroupMonitors()
+    {
+        MonitorGroups = new List<GameObject>();
+        MonitorsGrouped = new List<List<GameObject>>();
+        int maxX = Width / 20;
+        int maxY = Height / 20;
+        for (int x = 0; x < maxX; x++)
+        {
+            for (int y = 0; y < maxY; y++)
+            {
+                var monitorGroup = new GameObject($"{x}-{y}_MonitorGroup");
+                var groupedMonitors = new List<GameObject>();
+                for (int subX = x * 20; subX < (x * 20) + 20; subX++)
+                {
+                    for (int subY = y * 20; subY < (y * 20) + 20; subY++)
+                    {
+                        if (Monitors[subX, subY] != null)
+                        {
+                            groupedMonitors.Add(Monitors[subX, subY]);
+                        }
+                    }
+                }
+
+                MonitorsGrouped.Add(groupedMonitors);
+                var centre = (groupedMonitors[groupedMonitors.Count - 1].transform.position - groupedMonitors[0].transform.position) / 2;
+                monitorGroup.transform.position = groupedMonitors[0].transform.position + centre;
+                monitorGroup.transform.parent = _nodes.transform;
+                foreach (var monitor in groupedMonitors)
+                {
+                    monitor.transform.parent = monitorGroup.transform;
+                }
+                monitorGroup.SetActive(false);
+                MonitorGroups.Add(monitorGroup);
+            }
+        }
     }
 
     private TileType GetTileTypeFromHeight(float height)

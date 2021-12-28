@@ -8,7 +8,6 @@ public class CameraController : MonoBehaviour
     private float _moveSpeed = 10f;
     private float _rotateSpeed = 20f;
     private Vector3? _lastPosition = null;
-    //private List<GameObject> _lastMonitors = new List<GameObject>();
 
     void Update()
     {
@@ -26,12 +25,12 @@ public class CameraController : MonoBehaviour
 
     private void ActivateMonitors()
     {
-        for (int i = 0; i < Map.Instance.MonitorsList.Count; i++)
+        for (int i = 0; i < Map.Instance.MonitorGroups.Count; i++)
         {
-            var monitor = Map.Instance.MonitorsList[i];
-            if (monitor != null)
+            var monitorGroup = Map.Instance.MonitorGroups[i];
+            if (monitorGroup != null)
             {
-                monitor.SetActive((transform.position- monitor.transform.position).sqrMagnitude < 600f);
+                monitorGroup.SetActive((transform.position - monitorGroup.transform.position).sqrMagnitude < 1000f);
             }
         }
     }
