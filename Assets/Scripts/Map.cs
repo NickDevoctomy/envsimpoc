@@ -296,8 +296,16 @@ public class Map : MonoBehaviour
                     }
                 }
 
+                if(!groupedMonitors.Any())
+                {
+                    // This can happen if the tiles contain only rocks, hence no monitors,
+                    // so groupedMonitors will be empty.
+                    GameObject.DestroyImmediate(monitorGroup);
+                    continue;
+                }
+
                 MonitorsGrouped.Add(groupedMonitors);
-                var centre = (groupedMonitors[groupedMonitors.Count - 1].transform.position - groupedMonitors[0].transform.position) / 2;
+                var centre = (groupedMonitors.Last().transform.position - groupedMonitors.First().transform.position) / 2;
                 monitorGroup.transform.position = groupedMonitors[0].transform.position + centre;
                 monitorGroup.transform.parent = _nodes.transform;
                 foreach (var monitor in groupedMonitors)
