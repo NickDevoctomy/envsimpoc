@@ -15,6 +15,7 @@ public class Simulator : MonoBehaviour
         _effectLayerManager = new EffectLayerManager(Map);
         _effectLayerManager.CreateLayer<Monitor>("temperature");
         _temperatureEffectLayerManagerEffector = new TemperatureEffectLayerManagerEffector();
+        SetAllMonitorNeighbours();
     }
 
     void Update()
@@ -39,13 +40,28 @@ public class Simulator : MonoBehaviour
         {
             for (int y = 0; y < Map.Height; y++)
             {
-                if(layer[0][x, y] != null)
+                if(layer[x, y] != null)
                 {
                     count += 1;
                 }
             }
         }
         UnityEngine.Debug.Log($"Nodes in layer = {count}");
-        layer[0][0, 0].Temperature = (count * 100);
+        layer[0, 0].Temperature = (count * 100);
+    }
+
+    private void SetAllMonitorNeighbours()
+    {
+        var layer = _effectLayerManager.GetLayer<Monitor>("temperature");
+        for (int x = 0; x < Map.Width; x++)
+        {
+            for (int y = 0; y < Map.Height; y++)
+            {
+                if (layer[x, y] != null)
+                {
+                    layer[x, y].SetAllNeighbours(Map, layer);
+                }
+            }
+        }
     }
 }

@@ -266,6 +266,7 @@ public class Map : MonoBehaviour
                     var monitorNode = Instantiate(MonitorNodePrefab);
                     monitorNode.transform.parent = _nodes.transform;
                     monitorNode.transform.position = new Vector3(x, 2.0f, y);
+                    monitorNode.GetComponent<Monitor>().Location = new Point(x, y);
                     Monitors[x, y] = monitorNode;
                 }
             }
