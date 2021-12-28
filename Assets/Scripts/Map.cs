@@ -23,15 +23,21 @@ public class Map : MonoBehaviour
     public List<GameObject> MonitorsList { get; private set; }
     public List<List<GameObject>> MonitorsGrouped { get; private set; }
     public List<GameObject> MonitorGroups { get; private set; }
+    public List<List<GameObject>> TilesGrouped { get; private set; }
+    public List<GameObject> TileGroups { get; private set; }
+
 
     private static Map _instance;
     private PerlinNoiseMapGenerator _perlinNoiseMapGenerator = new PerlinNoiseMapGenerator();
     private float[] _terrainPoints;
-    private GameObject _terrain;
+    private GameObject _tiles;
+    private GameObject _tileGroups;
     private GameObject _coverings;
     private GameObject _water;
     private GameObject _nodes;
     private TileType[,] _terrainTiles;
+    private List<GameObject>[,] _allTerrain;
+    private GameObject[,] _tileCoverings;
 
     private Dictionary<Point, GameObject> _allLand;
     private Dictionary<Point, GameObject> _allBedRock;
@@ -56,6 +62,7 @@ public class Map : MonoBehaviour
         CleanUp();
         CreateTiles();
         CreateTileCoverings();
+        GroupTilesAndCoverings();
         CreateWater();
         CreateMonitorNodes();
         GroupMonitors();
@@ -63,7 +70,8 @@ public class Map : MonoBehaviour
 
     private void CleanUp()
     {
-        _terrain = AssureEmpty("Tiles");
+        _tiles = AssureEmpty("Tiles");
+        _tileGroups = AssureEmpty("TileGroups");
         _coverings = AssureEmpty("Covering");
         _water = AssureEmpty("Water");
     }
@@ -91,6 +99,7 @@ public class Map : MonoBehaviour
             Height);
         _allLand = new Dictionary<Point, GameObject>();
         _allBedRock = new Dictionary<Point, GameObject>();
+        _allTerrain = new List<GameObject>[Width, Height];
 
         var terrainIndex = 0;
         for (int x = 0; x < Width; x++)
@@ -101,10 +110,10 @@ public class Map : MonoBehaviour
                 var tileType = GetTileTypeFromHeight(height);
                 if (tileType == TileType.Rock)
                 {
-                    var landTile = CreateTile(TileType.Land, new Vector2(x, y), height);
+                    var landTile = CreateTile(TileType.Land, new Point(x, y), height);
                     _allLand.Add(new Point(x, y), landTile);
                 }
-                var tile = CreateTile(tileType, new Vector2(x, y), height);
+                var tile = CreateTile(tileType, new Point(x, y), height);
                 switch(tileType)
                 {
                     case TileType.Land:
@@ -131,8 +140,51 @@ public class Map : MonoBehaviour
         }
     }
 
+    private void GroupTilesAndCoverings()
+    {
+        TileGroups = new List<GameObject>();
+        TilesGrouped = new List<List<GameObject>>();
+        int maxX = Width / 20;
+        int maxY = Height / 20;
+        for (int x = 0; x < maxX; x++)
+        {
+            for (int y = 0; y < maxY; y++)
+            {
+                var tileGroup = new GameObject($"{x}-{y}_TileGroup");
+                var groupedTiles = new List<GameObject>();
+                for (int subX = x * 20; subX < (x * 20) + 20; subX++)
+                {
+                    for (int subY = y * 20; subY < (y * 20) + 20; subY++)
+                    {
+                        var tiles = _allTerrain[subX, subY];
+                        groupedTiles.AddRange(tiles);
+                        var covering = _tileCoverings[subX, subY];
+                        if (covering != null)
+                        {
+                            groupedTiles.Add(covering);
+                        }
+                    }
+                }
+
+                TilesGrouped.Add(groupedTiles);
+                var centre = (groupedTiles[groupedTiles.Count - 1].transform.position - groupedTiles[0].transform.position) / 2;
+                tileGroup.transform.position = groupedTiles[0].transform.position + centre;
+                tileGroup.transform.parent = _tileGroups.transform;
+                foreach (var monitor in groupedTiles)
+                {
+                    monitor.transform.parent = tileGroup.transform;
+                }
+                tileGroup.SetActive(false);
+                TileGroups.Add(tileGroup);
+            }
+        }
+
+        GameObject.DestroyImmediate(_tiles);
+    }
+
     private void CreateTileCoverings()
     {
+        _tileCoverings = new GameObject[Width, Height];
         var grassLayer = _perlinNoiseMapGenerator.Generate(
             Seed + 1,
             Width,
@@ -152,6 +204,7 @@ public class Map : MonoBehaviour
                         grass.name = $"{location.x}-{location.y}_GrassCovering";
                         grass.transform.parent = _coverings.transform;
                         grass.transform.position = new Vector3(location.x, 2f, location.y);
+                        _tileCoverings[x, y] = grass;
                     }
                 }
 
@@ -167,42 +220,27 @@ public class Map : MonoBehaviour
         waterSurface.transform.parent = _water.transform;
         waterSurface.transform.localScale = new Vector3((Width / 100) * 4, 1, (Height / 100) * 2);
         waterSurface.transform.position = new Vector3(Width / 2, 0.9f, Height / 2);
-
-
-        var bedRockMeshFilters = _allBedRock.Values.Select(x => x.transform.Find("Cube").GetComponent<MeshFilter>()).ToList();
-        CombineInstance[] combine = new CombineInstance[bedRockMeshFilters.Count];
-        for (var i = 0; i < bedRockMeshFilters.Count; i++)
-        {
-            combine[i].mesh = bedRockMeshFilters[i].sharedMesh;
-            combine[i].transform = bedRockMeshFilters[i].transform.localToWorldMatrix;
-            bedRockMeshFilters[i].gameObject.SetActive(false);
-        }
-
-        var mergedBedRock = new GameObject("BedRock");
-        mergedBedRock.transform.parent = _terrain.transform;
-        var mergedMeshFilter = mergedBedRock.AddComponent<MeshFilter>();
-        mergedMeshFilter.mesh = new Mesh();
-        mergedMeshFilter.sharedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-        mergedMeshFilter.sharedMesh.CombineMeshes(combine);
-        var mergedMeshRenderer = mergedBedRock.AddComponent<MeshRenderer>();
-        mergedMeshRenderer.material = WaterBedMaterial;
-        mergedBedRock.gameObject.SetActive(true);
-        _allBedRock.Values.ToList().ForEach(x => GameObject.DestroyImmediate(x.gameObject));
     }
 
     private GameObject CreateTile(
         TileType tileType,
-        Vector2 location,
+        Point location,
         float terrainPoint)
     {
         var tile = GameObject.Instantiate(GetPrefabFromTileType(tileType));
-        tile.name = $"{location.x}-{location.y}_{tileType}";
-        tile.transform.parent = _terrain.transform;
-        tile.transform.position = new Vector3(location.x, GetYOffsetFromTileType(tileType, terrainPoint), location.y);
+        tile.name = $"{location.X}-{location.Y}_{tileType}";
+        tile.transform.parent = _tiles.transform;
+        tile.transform.position = new Vector3(location.X, GetYOffsetFromTileType(tileType, terrainPoint), location.Y);
         if(tileType == TileType.Land)
         {
             tile.transform.localScale = new Vector3(1, 10, 1);
         }
+
+        if(_allTerrain[location.X, location.Y] == null)
+        {
+            _allTerrain[location.X, location.Y] = new List<GameObject>();
+        }
+        _allTerrain[location.X, location.Y].Add(tile);
 
         return tile;
     }

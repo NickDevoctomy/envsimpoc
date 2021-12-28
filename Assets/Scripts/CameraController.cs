@@ -30,5 +30,14 @@ public class CameraController : MonoBehaviour
                 monitorGroup.SetActive((transform.position - monitorGroup.transform.position).sqrMagnitude < 1000f);
             }
         }
+
+        for (int i = 0; i < Map.Instance.TileGroups.Count; i++)
+        {
+            var tileGroup = Map.Instance.TileGroups[i];
+            if (tileGroup != null)
+            {
+                tileGroup.SetActive((transform.position - tileGroup.transform.position).sqrMagnitude < 1000f);
+            }
+        }
     }
 }
