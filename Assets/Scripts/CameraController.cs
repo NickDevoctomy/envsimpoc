@@ -24,23 +24,14 @@ public class CameraController : MonoBehaviour
         }
     }
 
-    private void SetMonitorActive(GameObject gameObject, bool active)
-    {
-        if(gameObject.GetComponent<Monitor>() != null)
-        {
-            gameObject.SetActive(active);
-        }
-    }
-
     private void ActivateMonitors()
     {
-        for(int i = 0; i < Map.Instance.MonitorsList.Count; i++)
+        for (int i = 0; i < Map.Instance.MonitorsList.Count; i++)
         {
             var monitor = Map.Instance.MonitorsList[i];
             if (monitor != null)
             {
-                var distSqr = (transform.position - monitor.transform.position).sqrMagnitude;
-                monitor.SetActive(distSqr < 100f);
+                monitor.SetActive((transform.position- monitor.transform.position).sqrMagnitude < 600f);
             }
         }
     }
